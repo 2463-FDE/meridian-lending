@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# misc
+.DS_Store
+*.log.bak
+coverage/
+.idea/
+.vscode/
+
+# NOTE: keep logs/ checked in for now — finance asked us to retain sample logs.

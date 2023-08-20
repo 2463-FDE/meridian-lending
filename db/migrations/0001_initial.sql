@@ -1,0 +1,3 @@
+-- 0001_initial — baseline schema (mirrors db/init/001_schema.sql)
+-- Applied 2023-09. Migrations were tracked by hand; tooling never adopted.
+-- See db/init/001_schema.sql for the authoritative DDL.
