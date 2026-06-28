@@ -67,28 +67,18 @@ services:
       timeout: 5s
       retries: 5
 
-  ai-orchestrator:
-    build: ./services/ai-orchestrator
-    env_file: .env
-    ports:
-      - "8003:8003"
-    depends_on:
-      - origination-service
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8003/health').status==200 else 1)"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   gateway:
     build: ./services/gateway
     env_file: .env
     ports:
       - "8000:8000"
     depends_on:
-      - origination-service
-      - servicing-service
-      - ai-orchestrator
+      redis:
+        condition: service_healthy
+      origination-service:
+        condition: service_started
+      servicing-service:
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
       interval: 10s

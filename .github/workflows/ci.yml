@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [gateway, origination-service, servicing-service, ai-orchestrator]
+        service: [gateway, origination-service, servicing-service]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

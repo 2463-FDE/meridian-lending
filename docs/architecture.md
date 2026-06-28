@@ -34,18 +34,26 @@ to "make the demo work," not designed.
 
 ## Data stores
 
-- **Postgres** — applications, decisions, loans, balances, payments, audit_logs.
-- **Redis** — session cache (and intended for idempotency keys / jobs — not wired up).
+- **Postgres** — users, applicants, applications, kyc_checks, decisions, offers, loans,
+  balances, payments, audit_logs.
+- **Redis** — login sessions (gateway). Also intended for idempotency keys / jobs —
+  never wired up.
+
+## Auth
+
+The gateway handles login (`/auth/*`) against the `users` table, mints an opaque session
+token stored in Redis, and forwards the resolved identity downstream as `X-User-*`
+headers. Downstream services trust those headers and do **not** re-check role on
+money-moving actions (the weak-authz gap).
 
 ## External integrations
 
 - **Experian** — credit pull (key hardcoded in `origination-service/app/config.py`).
 - **Card/ACH processor** — payments (`servicing-service`).
-- **AWS Bedrock** — the half-built AI underwriting/summary assistant (`ai-orchestrator`).
 
 ## Known unknowns (things the team has not had time to map)
 
 - How balances are recomputed after a partial payment + a fee waiver on the same day.
 - Whether the processor settlement file actually ties out to the `payments` table.
 - Where adverse-action *reasons* are stored (we think… nowhere?).
-- What the AI assistant is allowed to say to a loan officer.
+- Whether any servicing action is actually restricted by role.

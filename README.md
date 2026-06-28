@@ -6,27 +6,28 @@ The Meridian Lending Co. loan origination + servicing platform. Originally deliv
 Halcyon Software Group (now dissolved); maintained in-house since 2024-Q4.
 
 This is a brownfield monorepo: a **Loan Origination System (LOS)** and a **Loan Servicing
-System (LSS)** bolted together behind a single API gateway, with a Next.js portal and a
-half-finished "AI underwriting assistant" the previous vendor started.
+System (LSS)** bolted together behind a single API gateway, with a Next.js borrower +
+servicing portal. (Lending Ops keeps asking for an "AI underwriting assistant" — that
+work has not been started.)
 
 ## Architecture
 
 ```
                           ┌──────────────────────┐
   Next.js portal  ───────►│   gateway (BFF)      │  :8000
-  (apply + servicing)     └─────────┬────────────┘
+  (apply + servicing)     │   session auth/roles │
+                          └─────────┬────────────┘
                                     │
         ┌───────────────────────────┼───────────────────────────┐
-        ▼                           ▼                           ▼
- origination-service        servicing-service           ai-orchestrator
-   :8001  (LOS)               :8002  (LSS)                :8003
-   intake / KYC /             payments / balances /        Bedrock summary
-   decisioning /              delinquency                   assistant (WIP)
-   disclosure
-        │                           │                           │
-        └──────────────┬────────────┴───────────────────────────┘
-                       ▼
-              Postgres :5432   +   Redis :6379
+        ▼                                                       ▼
+ origination-service                                    servicing-service
+   :8001  (LOS)                                           :8002  (LSS)
+   intake / KYC /                                         payments / balances /
+   decisioning / disclosure                               schedule / delinquency
+        │                                                       │
+        └──────────────────────────┬────────────────────────────┘
+                                    ▼
+              Postgres :5432   +   Redis :6379 (sessions)
 ```
 
 The LOS↔LSS **seam** is thin and undocumented — a loan "boards" from origination to
@@ -44,15 +45,17 @@ make down
 
 Portal: http://localhost:3000  ·  Gateway: http://localhost:8000/docs
 
+Demo logins (all seeded with password `password`): `admin`, `underwriter`, `csr`,
+and a borrower login `maria`.
+
 ## Services
 
 | Path | Service | Port | Notes |
 |------|---------|------|-------|
-| `frontend/` | Next.js 15 portal | 3000 | application intake + servicing dashboard |
-| `services/gateway/` | FastAPI BFF | 8000 | routes to LOS/LSS/AI |
+| `frontend/` | Next.js 15 portal | 3000 | application wizard + servicing dashboard |
+| `services/gateway/` | FastAPI BFF | 8000 | session auth/roles; routes to LOS/LSS |
 | `services/origination-service/` | FastAPI (LOS) | 8001 | intake, KYC, decisioning, disclosure |
-| `services/servicing-service/` | FastAPI (LSS) | 8002 | payments, balances, delinquency |
-| `services/ai-orchestrator/` | FastAPI | 8003 | Bedrock loan-summary assistant (half-built) |
+| `services/servicing-service/` | FastAPI (LSS) | 8002 | payments, balances, schedule, delinquency |
 | `db/` | Postgres init + seed | 5432 | schema, migrations, seed data |
 
 ## Compliance
@@ -64,5 +67,5 @@ Compliance contact: Dana (VP Lending Ops). For SOX/reconciliation questions: Sam
 
 ## Known follow-ups (from the Halcyon handoff note)
 
-> "Platform is secure and compliant. A few TODOs left in servicing and the AI box but
-> nothing blocking. — Halcyon"
+> "Platform is secure and compliant. A few TODOs left in servicing but nothing
+> blocking. — Halcyon"
