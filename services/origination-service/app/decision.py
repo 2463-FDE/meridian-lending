@@ -38,8 +38,12 @@ def _pull_credit(ssn: str) -> int:
 
 
 def _run_model(bureau_score: int, application: dict) -> dict:
-    """The 'new AI scorer'. Returns a score + decision + a GENERIC reason."""
-    time.sleep(0.05)  # stand-in for a slow model call on the request thread
+    """The rules-based risk scorecard. Returns a score + decision + a GENERIC reason.
+
+    (This is the legacy statistical scorecard. The client keeps asking for a smarter
+    "AI" model — that work has not started; there is no ML/LLM in the baseline.)
+    """
+    time.sleep(0.05)  # stand-in for a slow scorecard pass on the request thread
     model_score = int(bureau_score * 0.9 + (application.get("income", 0) / 1000))
     if model_score >= 660:
         return {"score": model_score, "decision": "approve", "adverse_action_reason": None}

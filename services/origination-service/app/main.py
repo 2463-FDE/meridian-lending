@@ -1,63 +1,37 @@
 """Origination service (LOS) — FastAPI.
 
-Endpoints: application intake, KYC (CIP), decisioning, offer/disclosure.
+Endpoints: application intake, KYC (CIP), decisioning, offer/disclosure, and the
+LOS->LSS boarding seam. Read paths (list/detail) use SQLAlchemy; the older write paths
+(intake, decisioning, boarding) still use raw psycopg2 — a partial, unfinished migration.
 """
-from fastapi import FastAPI
+import logging
+import os
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional
 
-from . import intake, kyc, decision
+from . import intake
 from .logging_config import get_logger
+from .routers import applications, offers
 
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 log = get_logger("origination")
-app = FastAPI(title="Meridian Origination Service (LOS)", version="1.0.0")
+
+app = FastAPI(title="Meridian Origination Service (LOS)", version="2.0.0")
+app.include_router(applications.router)
+app.include_router(offers.router)
 
 
-class ApplicationIn(BaseModel):
-    name: str
-    dob: Optional[str] = None
-    ssn: Optional[str] = None
-    ein: Optional[str] = None
-    is_entity: bool = False
-    address: Optional[str] = None
-    amount: float
-    term_months: int = 36
-    purpose: Optional[str] = None
-    income: Optional[float] = None
+@app.exception_handler(Exception)
+async def unhandled(request: Request, exc: Exception):
+    log.error("unhandled error on %s: %s", request.url.path, exc)
+    return JSONResponse(status_code=500, content={"detail": "internal error"})
 
 
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "origination"}
-
-
-@app.post("/applications")
-def submit_application(body: ApplicationIn):
-    payload = body.model_dump()
-    app_id = intake.create_application(payload)
-    cip = kyc.run_cip(payload)  # CIP only — no sanctions/UBO/monitoring
-    return {"app_id": app_id, "kyc": cip}
-
-
-@app.get("/decision/{app_id}")
-def get_decision(app_id: int):
-    # synchronous decisioning chain on the request thread
-    application = {"app_id": app_id, "ssn": "", "income": 50000}
-    return decision.decide(application)
-
-
-class OfferIn(BaseModel):
-    app_id: int
-    principal: float
-    annual_rate_pct: float = 7.99
-    term_months: int = 48
-
-
-@app.post("/offer")
-def make_offer(body: OfferIn):
-    o = intake.build_disclosure(body.app_id, body.principal, body.annual_rate_pct,
-                                body.term_months)
-    return {"app_id": body.app_id, "disclosure": o}
 
 
 class BoardIn(BaseModel):
@@ -70,6 +44,7 @@ class BoardIn(BaseModel):
 
 @app.post("/board")
 def board(body: BoardIn):
+    """Legacy direct-boarding endpoint (the LOS->LSS seam). See docs/architecture.md."""
     loan_id = intake.board_to_servicing(
         body.app_id, body.applicant_name, body.principal,
         body.annual_rate_pct, body.term_months,
