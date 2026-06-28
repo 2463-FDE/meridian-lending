@@ -1,25 +1,81 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="wrap">
-      <h1>Meridian Lending</h1>
-      <p className="sub">Consumer loan origination &amp; servicing platform</p>
-
-      <div className="card">
-        <p>
-          Welcome to the Meridian Lending portal. Borrowers can apply for a personal
-          installment loan and manage their account here.
-        </p>
-        <p className="sub" style={{ marginTop: 16 }}>
-          <span className="badge">SOX-controlled</span>{" "}
-          <span className="badge">PCI compliant</span>{" "}
+      <section className="hero">
+        <div className="badge-row" style={{ marginBottom: 16 }}>
+          {/* Texture: the platform over-claims its compliance posture. */}
+          <span className="badge">SOX-controlled</span>
+          <span className="badge">PCI compliant</span>
           <span className="badge">ECOA / Reg B</span>
+        </div>
+
+        <h1>Personal loans, decided fast and disclosed honestly.</h1>
+        <p className="hero-lede">
+          Meridian Lending offers fixed-rate personal installment loans from{" "}
+          <strong>$1,000 to $50,000</strong>, terms of 12 to 60 months. Check
+          your offer, review your Truth-in-Lending disclosure up front, and
+          manage your loan online.
         </p>
-        <h2>Get started</h2>
-        <p>
-          <a href="/apply">Apply for a loan →</a>
-          <br />
-          <a href="/servicing">Servicing dashboard →</a>
-        </p>
+
+        <div className="btn-row">
+          <Link href="/apply" className="btn">
+            Apply for a loan
+          </Link>
+          <Link href="/servicing" className="btn btn-ghost">
+            Servicing dashboard
+          </Link>
+        </div>
+      </section>
+
+      <h2>Why Meridian</h2>
+      <div className="grid grid-3">
+        <div className="feature">
+          <div className="feature-icon" aria-hidden>
+            ⚡
+          </div>
+          <h3>Fast decisions</h3>
+          <p>
+            Soft-pull pre-qualification and an automated underwriting decision
+            in minutes — approve, refer, or decline with a clear reason.
+          </p>
+        </div>
+        <div className="feature">
+          <div className="feature-icon" aria-hidden>
+            📄
+          </div>
+          <h3>Transparent disclosures</h3>
+          <p>
+            See your APR, finance charge, amount financed, and total of payments
+            in a standard Truth-in-Lending box before you accept anything.
+          </p>
+        </div>
+        <div className="feature">
+          <div className="feature-icon" aria-hidden>
+            💳
+          </div>
+          <h3>Manage your loan online</h3>
+          <p>
+            Track your balance, view your amortization schedule and payment
+            history, and make a payment from one servicing dashboard.
+          </p>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 28 }}>
+        <div className="spread">
+          <div>
+            <h3 style={{ marginBottom: 4 }}>Ready to see your rate?</h3>
+            <p className="muted" style={{ margin: 0 }}>
+              Checking your offer takes a few minutes and won&apos;t affect your
+              ability to apply.
+            </p>
+          </div>
+          <Link href="/apply" className="btn">
+            Start application
+          </Link>
+        </div>
       </div>
     </main>
   );
