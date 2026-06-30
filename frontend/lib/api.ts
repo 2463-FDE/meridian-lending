@@ -41,6 +41,26 @@ export function clearSession() {
   window.localStorage.removeItem(USER_KEY);
 }
 
+/**
+ * Role -> landing route after login. Used by login redirect + nav.
+ * UI-only routing convenience. The gateway/API still accept ANY authenticated
+ * caller — server-side authz is intentionally absent (debt D8, fixed in W6).
+ * A role can still navigate anywhere by URL; this only sets the default landing.
+ */
+export function roleHome(role: string | null | undefined): string {
+  switch (role) {
+    case "csr":
+      return "/servicing";
+    case "underwriter":
+      return "/underwriting";
+    case "admin":
+      return "/admin";
+    case "borrower":
+    default:
+      return "/";
+  }
+}
+
 // ---- fetch helpers -------------------------------------------------------
 
 export class ApiError extends Error {

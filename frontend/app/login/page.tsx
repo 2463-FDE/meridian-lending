@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { apiPost, setSession, type SessionUser } from "../../lib/api";
+import { apiPost, roleHome, setSession, type SessionUser } from "../../lib/api";
 
 const SEEDED = [
   { creds: "csr / password", role: "Servicing rep" },
@@ -31,7 +31,9 @@ export default function LoginPage() {
         throw new Error("Login failed — no token returned.");
       }
       setSession(res.token, res.user);
-      router.push("/servicing");
+      // Role-based landing only — every role can still reach any route by URL
+      // (server-side authz is intentionally absent, debt D8, fixed in W6).
+      router.push(roleHome(res.user?.role));
     } catch (err) {
       const msg =
         err && typeof err === "object" && "detail" in err
