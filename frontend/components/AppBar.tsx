@@ -32,6 +32,45 @@ export default function AppBar() {
     );
   };
 
+  // UI-only affordance: nav is built from the session role purely to shape what
+  // each role SEES. It does NOT restrict access — every route is reachable by
+  // URL and the gateway/API still accept ANY authenticated caller (debt D8,
+  // fixed in W6).
+  const navItems = ((): { href: string; label: string }[] => {
+    switch (user?.role) {
+      case "borrower":
+        return [
+          { href: "/", label: "Home" },
+          { href: "/apply", label: "Apply" },
+          { href: "/my-loan", label: "My Loan" },
+        ];
+      case "csr":
+        return [
+          { href: "/", label: "Home" },
+          { href: "/servicing", label: "Servicing" },
+        ];
+      case "underwriter":
+        return [
+          { href: "/", label: "Home" },
+          { href: "/underwriting", label: "Underwriting" },
+          { href: "/servicing", label: "Servicing" },
+        ];
+      case "admin":
+        return [
+          { href: "/", label: "Home" },
+          { href: "/admin", label: "Overview" },
+          { href: "/underwriting", label: "Underwriting" },
+          { href: "/servicing", label: "Servicing" },
+        ];
+      default:
+        // anonymous / unknown role
+        return [
+          { href: "/", label: "Home" },
+          { href: "/apply", label: "Apply" },
+        ];
+    }
+  })();
+
   return (
     <header className="appbar">
       <div className="appbar-inner">
@@ -45,9 +84,9 @@ export default function AppBar() {
         </Link>
 
         <nav className="appbar-nav">
-          {navLink("/", "Home")}
-          {navLink("/apply", "Apply")}
-          {navLink("/servicing", "Servicing")}
+          {navItems.map((item) => (
+            <span key={item.href}>{navLink(item.href, item.label)}</span>
+          ))}
         </nav>
 
         <div className="appbar-auth">

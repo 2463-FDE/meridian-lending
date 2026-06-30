@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import StatusChip from "../../../components/StatusChip";
-import { apiGet, apiPost } from "../../../lib/api";
+import { apiGet, apiPost, getUser } from "../../../lib/api";
 import { usd, pct, shortDate } from "../../../lib/format";
 
 interface Loan {
@@ -62,6 +62,16 @@ export default function LoanDetailPage() {
   const [actionBusy, setActionBusy] = useState(false);
   const [newBalance, setNewBalance] = useState("");
   const [waiveAmount, setWaiveAmount] = useState("");
+
+  // UI-only affordance: only CSR/admin SEE the money-moving rep actions
+  // (adjust balance / waive fee). The gateway/API still accept ANY
+  // authenticated caller — server-side authz is intentionally absent
+  // (debt D8, fixed in W6). Hiding the buttons changes nothing server-side.
+  const [canRepActions, setCanRepActions] = useState(false);
+  useEffect(() => {
+    const role = getUser()?.role;
+    setCanRepActions(role === "csr" || role === "admin");
+  }, []);
 
   const loadAll = useCallback(async () => {
     if (!loanId) return;
@@ -364,53 +374,59 @@ export default function LoanDetailPage() {
         </p>
       </div>
 
-      {/* Rep actions — shown to ANY authenticated user (weak-authz texture) */}
-      {/* weak authz: any authenticated user can do this */}
-      <h2>Servicing rep actions</h2>
-      <div className="grid grid-2">
-        <div className="card">
-          <div className="card-title" style={{ marginBottom: 10 }}>
-            Adjust balance
+      {/* Rep actions — UI-only affordance, shown only to CSR/admin. */}
+      {/* UI-only affordance. The gateway/API still accept ANY authenticated */}
+      {/* caller — server-side authz is intentionally absent (debt D8, fixed */}
+      {/* in W6). The endpoints below remain callable by every role. */}
+      {canRepActions ? (
+        <>
+          <h2>Servicing rep actions</h2>
+          <div className="grid grid-2">
+            <div className="card">
+              <div className="card-title" style={{ marginBottom: 10 }}>
+                Adjust balance
+              </div>
+              <label>New balance (USD)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={newBalance}
+                onChange={(e) => setNewBalance(e.target.value)}
+                placeholder={loan ? String(loan.balance) : "0.00"}
+              />
+              <button
+                className="btn-ghost btn-block"
+                style={{ marginTop: 14 }}
+                onClick={adjustBalance}
+                disabled={actionBusy || !newBalance}
+              >
+                Adjust balance
+              </button>
+            </div>
+            <div className="card">
+              <div className="card-title" style={{ marginBottom: 10 }}>
+                Waive fee
+              </div>
+              <label>Waiver amount (USD)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={waiveAmount}
+                onChange={(e) => setWaiveAmount(e.target.value)}
+                placeholder="0.00"
+              />
+              <button
+                className="btn-ghost btn-block"
+                style={{ marginTop: 14 }}
+                onClick={waiveFee}
+                disabled={actionBusy || !waiveAmount}
+              >
+                Waive fee
+              </button>
+            </div>
           </div>
-          <label>New balance (USD)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={newBalance}
-            onChange={(e) => setNewBalance(e.target.value)}
-            placeholder={loan ? String(loan.balance) : "0.00"}
-          />
-          <button
-            className="btn-ghost btn-block"
-            style={{ marginTop: 14 }}
-            onClick={adjustBalance}
-            disabled={actionBusy || !newBalance}
-          >
-            Adjust balance
-          </button>
-        </div>
-        <div className="card">
-          <div className="card-title" style={{ marginBottom: 10 }}>
-            Waive fee
-          </div>
-          <label>Waiver amount (USD)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={waiveAmount}
-            onChange={(e) => setWaiveAmount(e.target.value)}
-            placeholder="0.00"
-          />
-          <button
-            className="btn-ghost btn-block"
-            style={{ marginTop: 14 }}
-            onClick={waiveFee}
-            disabled={actionBusy || !waiveAmount}
-          >
-            Waive fee
-          </button>
-        </div>
-      </div>
+        </>
+      ) : null}
     </main>
   );
 }
